@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PositionCard from "./PositionCard";
 
 export default function Journal() {
   const [orders, setOrders] = useState([]);
@@ -321,6 +322,7 @@ export default function Journal() {
           </tbody>
         </table>
       </div>
+      <PositionCard />
     </div>
-  );
+     );
 }
