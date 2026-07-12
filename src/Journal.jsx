@@ -1,9 +1,11 @@
 import { useState } from "react";
+import DailyPlan from "./DailyPlan";
 import PositionCard from "./PositionCard";
 
 export default function Journal() {
   const [orders, setOrders] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [history, setHistory] = useState([]);
 
   const [form, setForm] = useState({
     market: "Equity",
@@ -55,18 +57,20 @@ export default function Journal() {
 
     if (form.purpose === "New Position") {
       updatedPositions.push({
-        symbol: form.symbol.toUpperCase(),
-        qty,
-        avgPrice: price,
-        status: "Open",
-      });
+  symbol: form.symbol.toUpperCase(),
+  market: form.market,
+  qty,
+  avgPrice: price,
+  realizedPnL: 0,
+  status: "Open",
+});
     }
 
     if (form.purpose === "Average Position") {
       const index = updatedPositions.findIndex(
         (p) =>
           p.symbol === form.symbol.toUpperCase() &&
-          p.status === "Open"
+          p.status !== "Closed"
       );
 
       if (index === -1) {
@@ -74,18 +78,14 @@ export default function Journal() {
         return;
       }
 
-      const position = updatedPositions[index];
-
-      position.avgPrice = calculateAverage(
-        position.qty,
-        position.avgPrice,
+      updatedPositions[index].avgPrice = calculateAverage(
+        updatedPositions[index].qty,
+        updatedPositions[index].avgPrice,
         qty,
         price
       );
 
-      position.qty += qty;
-
-      updatedPositions[index] = position;
+      updatedPositions[index].qty += qty;
     }
 
     setPositions(updatedPositions);
@@ -95,7 +95,7 @@ export default function Journal() {
       {
         ...form,
         quantity: qty,
-        price: price,
+        price,
       },
     ]);
 
@@ -113,11 +113,75 @@ export default function Journal() {
     });
   };
 
+  const partialExit = (index) => {
+    const exitQty = Number(prompt("Exit Quantity"));
+    const exitPrice = Number(prompt("Exit Price"));
+
+    if (!exitQty || !exitPrice) return;
+
+    const updatedPositions = [...positions];
+
+    const position = updatedPositions[index];
+
+    if (exitQty > position.qty) {
+      alert("Exit quantity cannot exceed current quantity.");
+      return;
+    }
+
+    const pnl =
+      (exitPrice - position.avgPrice) * exitQty;
+
+    position.realizedPnL += pnl;
+    position.qty -= exitQty;
+
+    if (position.qty === 0) {
+      position.status = "Closed";
+
+      setHistory((prev) => [...prev, position]);
+
+      updatedPositions.splice(index, 1);
+    } else {
+      position.status = "Partial";
+      updatedPositions[index] = position;
+    }
+
+    setPositions(updatedPositions);
+
+    alert(`Booked P&L : ₹${pnl}`);
+  };
+
+  const fullExit = (index) => {
+    const exitPrice = Number(prompt("Exit Price"));
+
+    if (!exitPrice) return;
+
+    const updatedPositions = [...positions];
+
+    const position = updatedPositions[index];
+
+    const pnl =
+      (exitPrice - position.avgPrice) * position.qty;
+
+    position.realizedPnL += pnl;
+    position.qty = 0;
+    position.status = "Closed";
+
+    setHistory((prev) => [...prev, position]);
+
+    updatedPositions.splice(index, 1);
+
+    setPositions(updatedPositions);
+
+    alert(`Trade Closed\nP&L : ₹${position.realizedPnL}`);
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Trading Journal</h2>
 
-      {/* Add Order Form */}
+      <DailyPlan />
+
+      {/* ---------------- ADD ORDER ---------------- */}
 
       <div
         style={{
@@ -239,7 +303,7 @@ export default function Journal() {
         </button>
       </div>
 
-      {/* Orders */}
+      {/* ---------------- ORDERS ---------------- */}
 
       <div
         style={{
@@ -283,7 +347,7 @@ export default function Journal() {
         </table>
       </div>
 
-      {/* Open Positions */}
+      {/* ---------------- OPEN POSITIONS ---------------- */}
 
       <div
         style={{
@@ -295,34 +359,71 @@ export default function Journal() {
       >
         <h3>Open Positions</h3>
 
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Quantity</th>
-              <th>Average Price</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {positions.map((position, index) => (
-              <tr key={index}>
-                <td>{position.symbol}</td>
-                <td>{position.qty}</td>
-                <td>{position.avgPrice.toFixed(2)}</td>
-                <td>{position.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {positions.length === 0 ? (
+          <p>No Open Positions</p>
+        ) : (
+          positions.map((position, index) => (
+            <PositionCard
+              key={index}
+              position={position}
+              onPartialExit={() => partialExit(index)}
+              onFullExit={() => fullExit(index)}
+            />
+          ))
+        )}
       </div>
-      <PositionCard />
+
+      {/* ---------------- CLOSED TRADES ---------------- */}
+
+      <div
+        style={{
+          marginTop: "30px",
+          background: "#1e293b",
+          padding: "20px",
+          borderRadius: "12px",
+        }}
+      >
+        <h3>Trade History</h3>
+
+        {history.length === 0 ? (
+          <p>No Closed Trades</p>
+        ) : (
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+            }}
+          >
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Average Price</th>
+                <th>Realized P&amp;L</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {history.map((trade, index) => (
+                <tr key={index}>
+                  <td>{trade.symbol}</td>
+                  <td>₹{trade.avgPrice}</td>
+                  <td
+                    style={{
+                      color:
+                        trade.realizedPnL >= 0
+                          ? "#22c55e"
+                          : "#ef4444",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ₹{trade.realizedPnL}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
-     );
+  );
 }
