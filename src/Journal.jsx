@@ -8,7 +8,8 @@ export default function Journal() {
   const [history, setHistory] = useState([]);
 
   const [form, setForm] = useState({
-    market: "Equity",
+    market: "Indian Market",
+    assetType: "Equity",  
     product: "Intraday",
     symbol: "",
     action: "BUY",
@@ -56,9 +57,12 @@ export default function Journal() {
     let updatedPositions = [...positions];
 
     if (form.purpose === "New Position") {
+
+      console.log("Selected Market:", form.market),
       updatedPositions.push({
   symbol: form.symbol.toUpperCase(),
   market: form.market,
+  
   qty,
   avgPrice: price,
   realizedPnL: 0,
@@ -100,17 +104,18 @@ export default function Journal() {
     ]);
 
     setForm({
-      market: "Equity",
-      product: "Intraday",
-      symbol: "",
-      action: "BUY",
-      purpose: "New Position",
-      quantity: "",
-      price: "",
-      date: "",
-      strategy: "",
-      notes: "",
-    });
+  market: "Indian Market",
+  assetType: "Equity",
+  product: "Intraday",
+  symbol: "",
+  action: "BUY",
+  purpose: "New Position",
+  quantity: "",
+  price: "",
+  date: "",
+  strategy: "",
+  notes: "",
+});
   };
 
   const partialExit = (index) => {
@@ -147,9 +152,24 @@ export default function Journal() {
 
     setPositions(updatedPositions);
 
-    alert(`Booked P&L : ₹${pnl}`);
+    alert(`Booked P&L : ${currency}${pnl}`);
   };
+const tradingStyles = {
+  "Indian Market": ["Intraday", "Swing", "Delivery"],
+  "Global Market": ["Intraday", "Swing", "Delivery"],
+  Forex: ["Intraday", "Swing"],
+  Crypto: ["Spot", "Perpetual"],
+};
 
+const currency =
+  form.market === "Indian Market" ? "₹" : "$";
+
+const quantityLabel =
+  form.market === "Crypto"
+    ? "Coins"
+    : form.market === "Forex"
+    ? "Lots"
+    : "Shares";
   const fullExit = (index) => {
     const exitPrice = Number(prompt("Exit Price"));
 
@@ -157,7 +177,11 @@ export default function Journal() {
 
     const updatedPositions = [...positions];
 
+
     const position = updatedPositions[index];
+    const currency =
+       position.market === "Indian Market" ? "₹" : "$";
+    console.log(position);
 
     const pnl =
       (exitPrice - position.avgPrice) * position.qty;
@@ -172,7 +196,7 @@ export default function Journal() {
 
     setPositions(updatedPositions);
 
-    alert(`Trade Closed\nP&L : ₹${position.realizedPnL}`);
+    alert(`Trade Closed\nP&L : ${currency}${position.realizedPnL}`);
   };
 
   return (
@@ -201,24 +225,27 @@ export default function Journal() {
           }}
         >
           <select
-            name="market"
-            value={form.market}
-            onChange={handleChange}
-          >
-            <option>Equity</option>
-            <option>Futures</option>
-            <option>Options</option>
-            <option>Crypto</option>
-          </select>
+  name="market"
+  value={form.market}
+  onChange={handleChange}
+>
+  <option>Indian Market</option>
+  <option>Global Market</option>
+  <option>Forex</option>
+  <option>Crypto</option>
+</select>
 
           <select
-            name="product"
-            value={form.product}
-            onChange={handleChange}
-          >
-            <option>Intraday</option>
-            <option>Delivery</option>
-          </select>
+  name="product"
+  value={form.product}
+  onChange={handleChange}
+>
+  {tradingStyles[form.market].map((style) => (
+    <option key={style} value={style}>
+      {style}
+    </option>
+  ))}
+</select>
 
           <input
             name="symbol"
@@ -248,7 +275,7 @@ export default function Journal() {
           <input
             type="number"
             name="quantity"
-            placeholder="Quantity"
+            placeholder={quantityLabel}
             value={form.quantity}
             onChange={handleChange}
           />
@@ -256,7 +283,7 @@ export default function Journal() {
           <input
             type="number"
             name="price"
-            placeholder="Price"
+            placeholder={`${currency} Price`}
             value={form.price}
             onChange={handleChange}
           />
