@@ -9,7 +9,7 @@ export default function Journal() {
 
   const [form, setForm] = useState({
     market: "Indian Market",
-    assetType: "Equity",  
+    assetType: "Equity",
     product: "Intraday",
     symbol: "",
     action: "BUY",
@@ -21,12 +21,71 @@ export default function Journal() {
     notes: "",
   });
 
+  // ---------------- Currency ----------------
+
+  const getCurrency = (market) => {
+    switch (market) {
+      case "Crypto":
+      case "Forex":
+      case "Global Market":
+        return "$";
+
+      default:
+        return "₹";
+    }
+  };
+
+  // ---------------- Quantity Label ----------------
+
+  const getQuantityLabel = (market) => {
+    switch (market) {
+      case "Crypto":
+        return "Coins";
+
+      case "Forex":
+        return "Lots";
+
+      default:
+        return "Shares";
+    }
+  };
+
+  // ---------------- Product Options ----------------
+
+  const tradingStyles = {
+    "Indian Market": [
+      "Intraday",
+      "Swing",
+      "Delivery",
+    ],
+
+    "Global Market": [
+      "Intraday",
+      "Swing",
+      "Delivery",
+    ],
+
+    Forex: [
+      "Intraday",
+      "Swing",
+    ],
+
+    Crypto: [
+      "Spot",
+      "Perpetual",
+    ],
+  };
+
+  // ---------------- Handle Change ----------------
+
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
   };
+
+  // ---------------- Average Price ----------------
 
   const calculateAverage = (
     oldQty,
@@ -39,6 +98,8 @@ export default function Journal() {
       (oldQty + newQty)
     );
   };
+
+  // ---------------- Save Order ----------------
 
   const saveOrder = () => {
     if (
@@ -57,17 +118,14 @@ export default function Journal() {
     let updatedPositions = [...positions];
 
     if (form.purpose === "New Position") {
-
-      console.log("Selected Market:", form.market),
       updatedPositions.push({
-  symbol: form.symbol.toUpperCase(),
-  market: form.market,
-  
-  qty,
-  avgPrice: price,
-  realizedPnL: 0,
-  status: "Open",
-});
+        symbol: form.symbol.toUpperCase(),
+        market: form.market,
+        qty,
+        avgPrice: price,
+        realizedPnL: 0,
+        status: "Open",
+      });
     }
 
     if (form.purpose === "Average Position") {
@@ -82,12 +140,13 @@ export default function Journal() {
         return;
       }
 
-      updatedPositions[index].avgPrice = calculateAverage(
-        updatedPositions[index].qty,
-        updatedPositions[index].avgPrice,
-        qty,
-        price
-      );
+      updatedPositions[index].avgPrice =
+        calculateAverage(
+          updatedPositions[index].qty,
+          updatedPositions[index].avgPrice,
+          qty,
+          price
+        );
 
       updatedPositions[index].qty += qty;
     }
@@ -104,19 +163,21 @@ export default function Journal() {
     ]);
 
     setForm({
-  market: "Indian Market",
-  assetType: "Equity",
-  product: "Intraday",
-  symbol: "",
-  action: "BUY",
-  purpose: "New Position",
-  quantity: "",
-  price: "",
-  date: "",
-  strategy: "",
-  notes: "",
-});
+      market: "Indian Market",
+      assetType: "Equity",
+      product: "Intraday",
+      symbol: "",
+      action: "BUY",
+      purpose: "New Position",
+      quantity: "",
+      price: "",
+      date: "",
+      strategy: "",
+      notes: "",
+    });
   };
+
+  // ---------------- Partial Exit ----------------
 
   const partialExit = (index) => {
     const exitQty = Number(prompt("Exit Quantity"));
@@ -125,16 +186,16 @@ export default function Journal() {
     if (!exitQty || !exitPrice) return;
 
     const updatedPositions = [...positions];
-
     const position = updatedPositions[index];
 
     if (exitQty > position.qty) {
-      alert("Exit quantity cannot exceed current quantity.");
+      alert("Exit quantity exceeds position.");
       return;
     }
 
     const pnl =
-      (exitPrice - position.avgPrice) * exitQty;
+      (exitPrice - position.avgPrice) *
+      exitQty;
 
     position.realizedPnL += pnl;
     position.qty -= exitQty;
@@ -142,34 +203,27 @@ export default function Journal() {
     if (position.qty === 0) {
       position.status = "Closed";
 
-      setHistory((prev) => [...prev, position]);
+      setHistory((prev) => [
+        ...prev,
+        { ...position },
+      ]);
 
       updatedPositions.splice(index, 1);
     } else {
       position.status = "Partial";
-      updatedPositions[index] = position;
     }
 
     setPositions(updatedPositions);
 
-    alert(`Booked P&L : ${currency}${pnl}`);
+    alert(
+      `Booked P&L : ${getCurrency(
+        position.market
+      )}${pnl.toFixed(2)}`
+    );
   };
-const tradingStyles = {
-  "Indian Market": ["Intraday", "Swing", "Delivery"],
-  "Global Market": ["Intraday", "Swing", "Delivery"],
-  Forex: ["Intraday", "Swing"],
-  Crypto: ["Spot", "Perpetual"],
-};
 
-const currency =
-  form.market === "Indian Market" ? "₹" : "$";
+  // ---------------- Full Exit ----------------
 
-const quantityLabel =
-  form.market === "Crypto"
-    ? "Coins"
-    : form.market === "Forex"
-    ? "Lots"
-    : "Shares";
   const fullExit = (index) => {
     const exitPrice = Number(prompt("Exit Price"));
 
@@ -177,29 +231,32 @@ const quantityLabel =
 
     const updatedPositions = [...positions];
 
-
     const position = updatedPositions[index];
-    const currency =
-       position.market === "Indian Market" ? "₹" : "$";
-    console.log(position);
 
     const pnl =
-      (exitPrice - position.avgPrice) * position.qty;
+      (exitPrice - position.avgPrice) *
+      position.qty;
 
     position.realizedPnL += pnl;
     position.qty = 0;
     position.status = "Closed";
 
-    setHistory((prev) => [...prev, position]);
+    setHistory((prev) => [
+      ...prev,
+      { ...position },
+    ]);
 
     updatedPositions.splice(index, 1);
 
     setPositions(updatedPositions);
 
-    alert(`Trade Closed\nP&L : ${currency}${position.realizedPnL}`);
+    alert(
+      `Trade Closed\nP&L : ${getCurrency(
+        position.market
+      )}${position.realizedPnL.toFixed(2)}`
+    );
   };
-
-  return (
+    return (
     <div style={{ padding: "20px" }}>
       <h2>Trading Journal</h2>
 
@@ -225,27 +282,25 @@ const quantityLabel =
           }}
         >
           <select
-  name="market"
-  value={form.market}
-  onChange={handleChange}
->
-  <option>Indian Market</option>
-  <option>Global Market</option>
-  <option>Forex</option>
-  <option>Crypto</option>
-</select>
+            name="market"
+            value={form.market}
+            onChange={handleChange}
+          >
+            <option>Indian Market</option>
+            <option>Global Market</option>
+            <option>Forex</option>
+            <option>Crypto</option>
+          </select>
 
           <select
-  name="product"
-  value={form.product}
-  onChange={handleChange}
->
-  {tradingStyles[form.market].map((style) => (
-    <option key={style} value={style}>
-      {style}
-    </option>
-  ))}
-</select>
+            name="product"
+            value={form.product}
+            onChange={handleChange}
+          >
+            {tradingStyles[form.market].map((style) => (
+              <option key={style}>{style}</option>
+            ))}
+          </select>
 
           <input
             name="symbol"
@@ -275,7 +330,7 @@ const quantityLabel =
           <input
             type="number"
             name="quantity"
-            placeholder={quantityLabel}
+            placeholder={getQuantityLabel(form.market)}
             value={form.quantity}
             onChange={handleChange}
           />
@@ -283,7 +338,7 @@ const quantityLabel =
           <input
             type="number"
             name="price"
-            placeholder={`${currency} Price`}
+            placeholder={`${getCurrency(form.market)} Price`}
             value={form.price}
             onChange={handleChange}
           />
@@ -342,18 +397,12 @@ const quantityLabel =
       >
         <h3>Orders</h3>
 
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-          }}
-        >
+        <table style={{ width: "100%" }}>
           <thead>
             <tr>
               <th>Date</th>
+              <th>Market</th>
               <th>Symbol</th>
-              <th>Action</th>
-              <th>Purpose</th>
               <th>Qty</th>
               <th>Price</th>
             </tr>
@@ -363,11 +412,13 @@ const quantityLabel =
             {orders.map((order, index) => (
               <tr key={index}>
                 <td>{order.date}</td>
+                <td>{order.market}</td>
                 <td>{order.symbol}</td>
-                <td>{order.action}</td>
-                <td>{order.purpose}</td>
                 <td>{order.quantity}</td>
-                <td>{order.price}</td>
+                <td>
+                  {getCurrency(order.market)}
+                  {order.price}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -400,7 +451,7 @@ const quantityLabel =
         )}
       </div>
 
-      {/* ---------------- CLOSED TRADES ---------------- */}
+      {/* ---------------- HISTORY ---------------- */}
 
       <div
         style={{
@@ -415,25 +466,28 @@ const quantityLabel =
         {history.length === 0 ? (
           <p>No Closed Trades</p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-            }}
-          >
+          <table style={{ width: "100%" }}>
             <thead>
               <tr>
+                <th>Market</th>
                 <th>Symbol</th>
                 <th>Average Price</th>
-                <th>Realized P&amp;L</th>
+                <th>Realized P&L</th>
               </tr>
             </thead>
 
             <tbody>
               {history.map((trade, index) => (
                 <tr key={index}>
+                  <td>{trade.market}</td>
+
                   <td>{trade.symbol}</td>
-                  <td>₹{trade.avgPrice}</td>
+
+                  <td>
+                    {getCurrency(trade.market)}
+                    {trade.avgPrice}
+                  </td>
+
                   <td
                     style={{
                       color:
@@ -443,7 +497,8 @@ const quantityLabel =
                       fontWeight: "bold",
                     }}
                   >
-                    ₹{trade.realizedPnL}
+                    {getCurrency(trade.market)}
+                    {trade.realizedPnL.toFixed(2)}
                   </td>
                 </tr>
               ))}
