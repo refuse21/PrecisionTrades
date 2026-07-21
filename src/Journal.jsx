@@ -234,29 +234,37 @@ if (editingIndex === null) {
   }
 
   // AVERAGE POSITION
-  if (form.purpose === "Average Position") {
-    const index = updatedPositions.findIndex(
-      (p) =>
-        p.symbol === form.symbol.toUpperCase() &&
-        p.status !== "Closed"
-    );
 
-    if (index === -1) {
-      alert("No Open Position Found");
-      return;
-    }
+if (form.purpose === "Average Position") {
+  const index = updatedPositions.findIndex(
+    (p) =>
+      p.symbol === form.symbol.toUpperCase() &&
+      p.status !== "Closed"
+  );
 
-    updatedPositions[index].avgPrice =
-      calculateAverage(
-        updatedPositions[index].qty,
-        updatedPositions[index].avgPrice,
-        qty,
-        price
-      );
-
-    updatedPositions[index].qty += qty;
+  if (index === -1) {
+    alert("No Open Position Found");
+    return;
   }
 
+  // Prevent averaging BUY with SELL
+  if (updatedPositions[index].action !== form.action) {
+    alert(
+      `Cannot average a ${form.action} order into a ${updatedPositions[index].action} position.`
+    );
+    return;
+  }
+
+  updatedPositions[index].avgPrice =
+    calculateAverage(
+      updatedPositions[index].qty,
+      updatedPositions[index].avgPrice,
+      qty,
+      price
+    );
+
+  updatedPositions[index].qty += qty;
+}
   setPositions(updatedPositions);
 }
     
