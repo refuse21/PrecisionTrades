@@ -338,23 +338,9 @@ export default function Journal() {
   };
 
   // =========================
-  // DELETE ORDER
-  // =========================
 
-  const deleteOrder = (index) => {
-    if (
-      !window.confirm(
-        "Delete this order?"
-      )
-    )
-      return;
 
-    const updatedOrders = [...orders];
-
-    updatedOrders.splice(index, 1);
-
-    setOrders(updatedOrders);
-  };
+  
     // =========================
   // PARTIAL EXIT
   // =========================
@@ -787,15 +773,7 @@ export default function Journal() {
                     >
                       ✏️
                     </button>
-
-                    <button
-                      onClick={() =>
-                        deleteOrder(orders.indexOf(order))
-                      }
-                    >
-                      🗑️
-                    </button>
-                  </td>
+                     </td>
                 </tr>
               ))}
             </tbody>
