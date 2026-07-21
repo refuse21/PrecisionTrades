@@ -259,8 +259,7 @@ if (editingIndex === null) {
 
   setPositions(updatedPositions);
 }
-    setPositions(updatedPositions);
-
+    
     const orderData = {
       ...form,
       quantity: qty,
