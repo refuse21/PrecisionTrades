@@ -215,47 +215,50 @@ export default function Journal() {
 
     let updatedPositions = [...positions];
 
-    // NEW POSITION
+    // Only create/update positions for NEW orders
+if (editingIndex === null) {
 
-    if (form.purpose === "New Position") {
-      updatedPositions.push({
-        symbol: form.symbol.toUpperCase(),
-        market: form.market,
-        product: form.product,
-        action: form.action,
-        qty,
-        avgPrice: price,
-        realizedPnL: 0,
-        status: "Open",
-        screenshot,
-      });
+  // NEW POSITION
+  if (form.purpose === "New Position") {
+    updatedPositions.push({
+      symbol: form.symbol.toUpperCase(),
+      market: form.market,
+      product: form.product,
+      action: form.action,
+      qty,
+      avgPrice: price,
+      realizedPnL: 0,
+      status: "Open",
+      screenshot,
+    });
+  }
+
+  // AVERAGE POSITION
+  if (form.purpose === "Average Position") {
+    const index = updatedPositions.findIndex(
+      (p) =>
+        p.symbol === form.symbol.toUpperCase() &&
+        p.status !== "Closed"
+    );
+
+    if (index === -1) {
+      alert("No Open Position Found");
+      return;
     }
 
-    // AVERAGE POSITION
-
-    if (form.purpose === "Average Position") {
-      const index = updatedPositions.findIndex(
-        (p) =>
-          p.symbol === form.symbol.toUpperCase() &&
-          p.status !== "Closed"
+    updatedPositions[index].avgPrice =
+      calculateAverage(
+        updatedPositions[index].qty,
+        updatedPositions[index].avgPrice,
+        qty,
+        price
       );
 
-      if (index === -1) {
-        alert("No Open Position Found");
-        return;
-      }
+    updatedPositions[index].qty += qty;
+  }
 
-      updatedPositions[index].avgPrice =
-        calculateAverage(
-          updatedPositions[index].qty,
-          updatedPositions[index].avgPrice,
-          qty,
-          price
-        );
-
-      updatedPositions[index].qty += qty;
-    }
-
+  setPositions(updatedPositions);
+}
     setPositions(updatedPositions);
 
     const orderData = {
