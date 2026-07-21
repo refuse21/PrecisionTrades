@@ -200,23 +200,59 @@ export default function Journal() {
   // =========================
 
   const saveOrder = () => {
-    if (
-      !form.symbol ||
-      !form.quantity ||
-      !form.price ||
-      !form.date
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
+  if (
+    !form.symbol ||
+    !form.quantity ||
+    !form.price ||
+    !form.date
+  ) {
+    alert("Please fill all required fields.");
+    return;
+  }
 
-    const qty = Number(form.quantity);
-    const price = Number(form.price);
+  const qty = Number(form.quantity);
+  const price = Number(form.price);
 
-    let updatedPositions = [...positions];
+  const orderData = {
+    ...form,
+    quantity: qty,
+    price,
+    screenshot,
+  };
 
-    // Only create/update positions for NEW orders
-if (editingIndex === null) {
+  // ==========================
+  // EDIT ORDER
+  // ==========================
+  if (editingIndex !== null) {
+    const updatedOrders = [...orders];
+    updatedOrders[editingIndex] = orderData;
+    setOrders(updatedOrders);
+
+    setEditingIndex(null);
+
+    setForm({
+      market: "Indian Market",
+      assetType: "Equity",
+      product: "Intraday",
+      symbol: "",
+      action: "BUY",
+      purpose: "New Position",
+      quantity: "",
+      price: "",
+      date: "",
+      strategy: "",
+      notes: "",
+    });
+
+    setScreenshot(null);
+    return;
+  }
+
+  // ==========================
+  // NEW ORDER
+  // ==========================
+
+  let updatedPositions = [...positions];
 
   // NEW POSITION
   if (form.purpose === "New Position") {
@@ -234,72 +270,56 @@ if (editingIndex === null) {
   }
 
   // AVERAGE POSITION
-
-if (form.purpose === "Average Position") {
-  const index = updatedPositions.findIndex(
-    (p) =>
-      p.symbol === form.symbol.toUpperCase() &&
-      p.status !== "Closed"
-  );
-
-  if (index === -1) {
-    alert("No Open Position Found");
-    return;
-  }
-
-  // Prevent averaging BUY with SELL
-  if (updatedPositions[index].action !== form.action) {
-    alert(
-      `Cannot average a ${form.action} order into a ${updatedPositions[index].action} position.`
-    );
-    return;
-  }
-
-  updatedPositions[index].avgPrice =
-    calculateAverage(
-      updatedPositions[index].qty,
-      updatedPositions[index].avgPrice,
-      qty,
-      price
+  if (form.purpose === "Average Position") {
+    const index = updatedPositions.findIndex(
+      (p) =>
+        p.symbol === form.symbol.toUpperCase() &&
+        p.status !== "Closed"
     );
 
-  updatedPositions[index].qty += qty;
-}
-  setPositions(updatedPositions);
-}
-    
-    const orderData = {
-      ...form,
-      quantity: qty,
-      price,
-      screenshot,
-    };
-
-    if (editingIndex !== null) {
-      const updatedOrders = [...orders];
-      updatedOrders[editingIndex] = orderData;
-      setOrders(updatedOrders);
-      setEditingIndex(null);
-    } else {
-      setOrders([...orders, orderData]);
+    if (index === -1) {
+      alert("No Open Position Found");
+      return;
     }
 
-    setForm({
-      market: "Indian Market",
-      assetType: "Equity",
-      product: "Intraday",
-      symbol: "",
-      action: "BUY",
-      purpose: "New Position",
-      quantity: "",
-      price: "",
-      date: "",
-      strategy: "",
-      notes: "",
-    });
+    if (updatedPositions[index].action !== form.action) {
+      alert(
+        `Cannot average a ${form.action} order into a ${updatedPositions[index].action} position.`
+      );
+      return;
+    }
 
-    setScreenshot(null);
-  };
+    updatedPositions[index].avgPrice =
+      calculateAverage(
+        updatedPositions[index].qty,
+        updatedPositions[index].avgPrice,
+        qty,
+        price
+      );
+
+    updatedPositions[index].qty += qty;
+  }
+
+  setPositions(updatedPositions);
+
+  setOrders([...orders, orderData]);
+
+  setForm({
+    market: "Indian Market",
+    assetType: "Equity",
+    product: "Intraday",
+    symbol: "",
+    action: "BUY",
+    purpose: "New Position",
+    quantity: "",
+    price: "",
+    date: "",
+    strategy: "",
+    notes: "",
+  });
+
+  setScreenshot(null);
+};
 
   // =========================
   // EDIT ORDER
@@ -559,12 +579,30 @@ if (form.purpose === "Average Position") {
             name="symbol"
             placeholder="Symbol"
             value={form.symbol}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           />
+          {editingIndex !== null && (
+  <div
+    style={{
+      background: "#3b2f0b",
+      color: "#facc15",
+      padding: "12px",
+      borderRadius: "8px",
+      marginBottom: "15px",
+      border: "1px solid #facc15",
+    }}
+  >
+    🔒 Core trade details are locked to preserve the accuracy of your historical P&L and analytics.
+    <br />
+    If any core trade details are incorrect, please delete the trade and create a new one.
+  </div>
+)}
 
           <select
             name="action"
             value={form.action}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           >
             <option>BUY</option>
@@ -574,6 +612,7 @@ if (form.purpose === "Average Position") {
           <select
             name="purpose"
             value={form.purpose}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           >
             <option>New Position</option>
@@ -585,6 +624,7 @@ if (form.purpose === "Average Position") {
             name="quantity"
             placeholder={getQuantityLabel(form.market)}
             value={form.quantity}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           />
 
@@ -593,6 +633,7 @@ if (form.purpose === "Average Position") {
             name="price"
             placeholder={`${getCurrency(form.market)} Price`}
             value={form.price}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           />
 
@@ -600,6 +641,7 @@ if (form.purpose === "Average Position") {
             type="date"
             name="date"
             value={form.date}
+            disabled={editingIndex !== null}
             onChange={handleChange}
           />
 
