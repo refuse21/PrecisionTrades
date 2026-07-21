@@ -1,3 +1,5 @@
+import Dashboard from "./Dashboard";
+import Journal from "./Journal";
 import { useState } from "react";
 import {
   BarChart3,
@@ -8,7 +10,7 @@ import {
 } from "lucide-react";
 
 import StatCard from "./StatCard";
-import Journal from "./Journal";
+
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -43,7 +45,39 @@ export default function App() {
           PrecisionTrades
         </h1>
 
-        <h3>👋 Welcome, Pritesh</h3>
+        <h3><div style={{ textAlign: "right" }}>
+  <h3 style={{ margin: 0 }}>
+    👋 Welcome, Pritesh
+  </h3>
+
+  <p
+    style={{
+      margin: "4px 0 0",
+      color: "#94a3b8",
+      fontSize: "14px",
+    }}
+  >
+    {new Date().toLocaleDateString(undefined, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })}
+  </p>
+
+  <p
+    style={{
+      margin: "2px 0 0",
+      color: "#64748b",
+      fontSize: "13px",
+    }}
+  >
+    {new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </p>
+</div></h3>
       </div>
 
       <div style={{ display: "flex" }}>
@@ -87,94 +121,9 @@ export default function App() {
         {/* Main Content */}
         <div style={{ flex: 1, padding: "30px" }}>
           {page === "dashboard" && (
-            <>
-              <h2>Dashboard</h2>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  flexWrap: "wrap",
-                  marginTop: "20px",
-                }}
-              >
-                <StatCard
-                  title="Total Trades"
-                  value="25"
-                  color="white"
-                />
-
-                <StatCard
-                  title="Winning Trades"
-                  value="18"
-                  color="#22c55e"
-                />
-
-                <StatCard
-                  title="Losing Trades"
-                  value="7"
-                  color="#ef4444"
-                />
-
-                <StatCard
-                  title="Net Profit"
-                  value="₹45,800"
-                  color="#22c55e"
-                />
-              </div>
-
-              <div
-                style={{
-                  marginTop: "40px",
-                  background: "#1e293b",
-                  padding: "20px",
-                  borderRadius: "12px",
-                }}
-              >
-                <h2>Recent Trades</h2>
-
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                  }}
-                >
-                  <thead>
-                    <tr>
-                      <th align="left">Date</th>
-                      <th align="left">Stock</th>
-                      <th align="left">Type</th>
-                      <th align="left">P/L</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <tr>
-                      <td>15 Jul</td>
-                      <td>RELIANCE</td>
-                      <td>BUY</td>
-                      <td style={{ color: "#22c55e" }}>+₹2,500</td>
-                    </tr>
-
-                    <tr>
-                      <td>14 Jul</td>
-                      <td>NIFTY</td>
-                      <td>SELL</td>
-                      <td style={{ color: "#ef4444" }}>-₹800</td>
-                    </tr>
-
-                    <tr>
-                      <td>13 Jul</td>
-                      <td>BANKNIFTY</td>
-                      <td>BUY</td>
-                      <td style={{ color: "#22c55e" }}>+₹4,200</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
+  <Dashboard />
+)}
+          
           {page === "journal" && <Journal />}
 
           {page === "analytics" && (

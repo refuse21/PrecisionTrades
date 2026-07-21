@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Dashboard from "./Dashboard";
 import DailyPlan from "./DailyPlan";
 import PositionCard from "./PositionCard";
 
@@ -223,6 +222,7 @@ export default function Journal() {
         symbol: form.symbol.toUpperCase(),
         market: form.market,
         product: form.product,
+        action: form.action,
         qty,
         avgPrice: price,
         realizedPnL: 0,
@@ -343,8 +343,10 @@ export default function Journal() {
       return;
     }
 
-    const pnl =
-      (exitPrice - position.avgPrice) * exitQty;
+   const pnl =
+  position.action === "BUY"
+    ? (exitPrice - position.avgPrice) * exitQty
+    : (position.avgPrice - exitPrice) * exitQty;
 
     position.realizedPnL += pnl;
     position.qty -= exitQty;
@@ -383,9 +385,10 @@ export default function Journal() {
     const updatedPositions = [...positions];
     const position = updatedPositions[index];
 
-    const pnl =
-      (exitPrice - position.avgPrice) *
-      position.qty;
+   const pnl =
+  position.action === "BUY"
+    ? (exitPrice - position.avgPrice) * position.qty
+    : (position.avgPrice - exitPrice) * position.qty;
 
     position.realizedPnL += pnl;
 
@@ -425,18 +428,7 @@ export default function Journal() {
 
       <DailyPlan />
 
-      {/* ================= Dashboard ================= */}
-
-      <Dashboard
-  indianPnL={indianPnL}
-  globalPnL={globalPnL}
-  forexPnL={forexPnL}
-  cryptoPnL={cryptoPnL}
-  openPositions={openPositions}
-  closedTrades={closedTrades}
-  totalOrders={totalOrders}
-  winRate={winRate}
-/>
+      
       {/* ================= Search & Filters ================= */}
 
       <div
