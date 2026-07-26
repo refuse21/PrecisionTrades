@@ -2,15 +2,20 @@ import { useState } from "react";
 import DailyPlan from "./DailyPlan";
 import PositionCard from "./PositionCard";
 
-export default function Journal() {
+export default function Journal({
+  orders,
+  setOrders,
+  positions,
+  setPositions,
+  history,
+  setHistory,
+}) {  
 
   // =========================
   // STATES
   // =========================
 
-  const [orders, setOrders] = useState([]);
-  const [positions, setPositions] = useState([]);
-  const [history, setHistory] = useState([]);
+ 
 
   const [editingIndex, setEditingIndex] = useState(null);
 

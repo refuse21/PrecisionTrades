@@ -11,9 +11,27 @@ import {
 
 import StatCard from "./StatCard";
 
+const monthlyPnL = {
+  indian: 0,
+  global: 0,
+  forex: 0,
+  crypto: 0,
+};
+
+const currentEquity = {
+  indian: 0,
+  global: 0,
+  forex: 0,
+  crypto: 0,
+};
+
+const recentActivity = [];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
+  const [orders, setOrders] = useState([]);
+const [positions, setPositions] = useState([]);
+const [history, setHistory] = useState([]);
 
   return (
     <div
@@ -121,10 +139,21 @@ export default function App() {
         {/* Main Content */}
         <div style={{ flex: 1, padding: "30px" }}>
           {page === "dashboard" && (
-  <Dashboard />
+  <Dashboard
+  orders={orders}
+  positions={positions}
+  history={history}
+/>
 )}
           
-          {page === "journal" && <Journal />}
+          {page === "journal" && <Journal
+  orders={orders}
+  setOrders={setOrders}
+  positions={positions}
+  setPositions={setPositions}
+  history={history}
+  setHistory={setHistory}
+/>}
 
           {page === "analytics" && (
             <>

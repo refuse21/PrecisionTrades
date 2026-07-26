@@ -1,32 +1,34 @@
 import DailyPlan from "./DailyPlan";
 
-export default function Dashboard() {
-  // ==========================================
-  // Temporary Data (Later we'll connect Journal)
-  // ==========================================
-
+export default function Dashboard({
+  orders,
+  positions,
+  history,
+}) {
   const todayPerformance = {
-    openPositions: 0,
-    closedTrades: 0,
-    todayTrades: 0,
-    winRate: 0,
-  };
+  openPositions: 0,
+  closedTrades: 0,
+  todayTrades: 0,
+  winRate: 0,
+};
 
-  const monthlyPnL = {
-    indian: 0,
-    global: 0,
-    forex: 0,
-    crypto: 0,
-  };
+const monthlyPnL = {
+  indian: 0,
+  global: 0,
+  forex: 0,
+  crypto: 0,
+};
 
-  const currentEquity = {
-    indian: 0,
-    global: 0,
-    forex: 0,
-    crypto: 0,
-  };
+const currentEquity = {
+  indian: 0,
+  global: 0,
+  forex: 0,
+  crypto: 0,
+};
 
-  const recentActivity = [];
+const recentActivity = [];
+  
+  
 
   // ==========================================
   // Common Card Style
@@ -98,7 +100,7 @@ export default function Dashboard() {
           color: "#38bdf8",
         }}
       >
-        {todayPerformance.openPositions}
+        {positions.filter((p) => p.status === "Open").length}
       </h1>
     </div>
 
@@ -120,7 +122,7 @@ export default function Dashboard() {
           color: "#22c55e",
         }}
       >
-        {todayPerformance.closedTrades}
+        {history.length}
       </h1>
     </div>
 
@@ -142,7 +144,12 @@ export default function Dashboard() {
           color: "#f59e0b",
         }}
       >
-        {todayPerformance.todayTrades}
+        {
+  orders.filter(
+    (order) =>
+      order.date === new Date().toISOString().split("T")[0]
+  ).length
+}
       </h1>
     </div>
 
@@ -164,7 +171,15 @@ export default function Dashboard() {
           color: "#a855f7",
         }}
       >
-        {todayPerformance.winRate}%
+        {
+  history.length === 0
+    ? 0
+    : (
+        (history.filter((trade) => trade.realizedPnL > 0).length /
+          history.length) *
+        100
+      ).toFixed(1)
+}%
       </h1>
     </div>
   </div>
