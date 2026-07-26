@@ -539,10 +539,11 @@ export default function Journal() {
           }}
         >
           <select
-            name="market"
-            value={form.market}
-            onChange={handleChange}
-          >
+  name="market"
+  value={form.market}
+  disabled={editingIndex !== null}
+  onChange={handleChange}
+>
             <option>Indian Market</option>
             <option>Global Market</option>
             <option>Forex</option>
@@ -550,10 +551,11 @@ export default function Journal() {
           </select>
 
           <select
-            name="product"
-            value={form.product}
-            onChange={handleChange}
-          >
+  name="product"
+  value={form.product}
+  disabled={editingIndex !== null}
+  onChange={handleChange}
+>
             {tradingStyles[form.market].map((style) => (
               <option key={style}>
                 {style}
@@ -579,9 +581,9 @@ export default function Journal() {
       border: "1px solid #facc15",
     }}
   >
-    🔒 Core trade details are locked to preserve the accuracy of your historical P&L and analytics.
+    🔒 Core trade details are locked to keep your trading history accurate.
     <br />
-    If any core trade details are incorrect, please delete the trade and create a new one.
+    Only strategy, notes, and screenshots can be edited.
   </div>
 )}
 
