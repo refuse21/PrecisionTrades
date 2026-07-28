@@ -2,6 +2,7 @@ import { useState } from "react";
 import DailyPlan from "./DailyPlan";
 import PositionCard from "./PositionCard";
 
+
 export default function Journal({
   orders,
   setOrders,
@@ -11,6 +12,7 @@ export default function Journal({
   setHistory,
 }) {  
 
+  console.log("Orders from App:", orders);
   // =========================
   // STATES
   // =========================
@@ -20,7 +22,6 @@ export default function Journal({
   const [editingIndex, setEditingIndex] = useState(null);
 
   const [search, setSearch] = useState("");
-
   const [marketFilter, setMarketFilter] = useState("All");
   const [productFilter, setProductFilter] = useState("All");
 

@@ -1,6 +1,6 @@
 import Dashboard from "./Dashboard";
 import Journal from "./Journal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Home,
@@ -32,6 +32,39 @@ export default function App() {
   const [orders, setOrders] = useState([]);
 const [positions, setPositions] = useState([]);
 const [history, setHistory] = useState([]);
+const [loaded, setLoaded] = useState(false);
+
+useEffect(() => {
+  const savedOrders = localStorage.getItem("orders");
+  const savedPositions = localStorage.getItem("positions");
+  const savedHistory = localStorage.getItem("history");
+
+  if (savedOrders) setOrders(JSON.parse(savedOrders));
+  if (savedPositions) setPositions(JSON.parse(savedPositions));
+  if (savedHistory) setHistory(JSON.parse(savedHistory));
+
+  setLoaded(true);
+}, []);
+
+useEffect(() => {
+  if (!loaded) return;
+  localStorage.setItem("orders", JSON.stringify(orders));
+}, [orders, loaded]);
+
+useEffect(() => {
+  if (!loaded) return;
+  localStorage.setItem("positions", JSON.stringify(positions));
+}, [positions, loaded]);
+
+useEffect(() => {
+  if (!loaded) return;
+  localStorage.setItem("history", JSON.stringify(history));
+}, [history, loaded]);
+console.log({
+  orders,
+  positions,
+  history,
+});
 
   return (
     <div
