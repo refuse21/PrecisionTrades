@@ -29,45 +29,58 @@ const recentActivity = [];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
+
   const [orders, setOrders] = useState([]);
-const [positions, setPositions] = useState([]);
-const [history, setHistory] = useState([]);
-const [loaded, setLoaded] = useState(false);
+  const [positions, setPositions] = useState([]);
+  const [history, setHistory] = useState([]);
 
-useEffect(() => {
-  const savedOrders = localStorage.getItem("orders");
-  const savedPositions = localStorage.getItem("positions");
-  const savedHistory = localStorage.getItem("history");
+  const [loaded, setLoaded] = useState(false);
 
-  if (savedOrders) setOrders(JSON.parse(savedOrders));
-  if (savedPositions) setPositions(JSON.parse(savedPositions));
-  if (savedHistory) setHistory(JSON.parse(savedHistory));
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  setLoaded(true);
-}, []);
+  useEffect(() => {
+    const savedOrders = localStorage.getItem("orders");
+    const savedPositions = localStorage.getItem("positions");
+    const savedHistory = localStorage.getItem("history");
 
-useEffect(() => {
-  if (!loaded) return;
-  localStorage.setItem("orders", JSON.stringify(orders));
-}, [orders, loaded]);
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
+    if (savedPositions) setPositions(JSON.parse(savedPositions));
+    if (savedHistory) setHistory(JSON.parse(savedHistory));
 
-useEffect(() => {
-  if (!loaded) return;
-  localStorage.setItem("positions", JSON.stringify(positions));
-}, [positions, loaded]);
+    setLoaded(true);
+  }, []);
 
-useEffect(() => {
-  if (!loaded) return;
-  localStorage.setItem("history", JSON.stringify(history));
-}, [history, loaded]);
-console.log({
-  orders,
-  positions,
-  history,
-});
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    localStorage.setItem("orders", JSON.stringify(orders));
+  }, [orders, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    localStorage.setItem("positions", JSON.stringify(positions));
+  }, [positions, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    localStorage.setItem("history", JSON.stringify(history));
+  }, [history, loaded]);
+
+  console.log({
+    orders,
+    positions,
+    history,
+  });
 
   return (
-    <div
+        <div
       style={{
         backgroundColor: "#0f172a",
         color: "white",
@@ -76,6 +89,7 @@ console.log({
       }}
     >
       {/* Header */}
+
       <div
         style={{
           display: "flex",
@@ -96,43 +110,46 @@ console.log({
           PrecisionTrades
         </h1>
 
-        <h3><div style={{ textAlign: "right" }}>
-  <h3 style={{ margin: 0 }}>
-    👋 Welcome, Pritesh
-  </h3>
+        <div style={{ textAlign: "right" }}>
+          <h3 style={{ margin: 0 }}>
+            👋 Welcome, Pritesh
+          </h3>
 
-  <p
-    style={{
-      margin: "4px 0 0",
-      color: "#94a3b8",
-      fontSize: "14px",
-    }}
-  >
-    {new Date().toLocaleDateString(undefined, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    })}
-  </p>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "#94a3b8",
+              fontSize: "14px",
+            }}
+          >
+            {currentTime.toLocaleDateString(undefined, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
 
-  <p
-    style={{
-      margin: "2px 0 0",
-      color: "#64748b",
-      fontSize: "13px",
-    }}
-  >
-    {new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}
-  </p>
-</div></h3>
+          <p
+            style={{
+              margin: "2px 0 0",
+              color: "#64748b",
+              fontSize: "13px",
+            }}
+          >
+            {currentTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        </div>
       </div>
+
+      {/* Main Layout */}
 
       <div style={{ display: "flex" }}>
         {/* Sidebar */}
+
         <div
           style={{
             width: "220px",
@@ -168,25 +185,27 @@ console.log({
             <Settings size={18} /> Settings
           </p>
         </div>
+                {/* Main Content */}
 
-        {/* Main Content */}
         <div style={{ flex: 1, padding: "30px" }}>
           {page === "dashboard" && (
-  <Dashboard
-  orders={orders}
-  positions={positions}
-  history={history}
-/>
-)}
-          
-          {page === "journal" && <Journal
-  orders={orders}
-  setOrders={setOrders}
-  positions={positions}
-  setPositions={setPositions}
-  history={history}
-  setHistory={setHistory}
-/>}
+            <Dashboard
+              orders={orders}
+              positions={positions}
+              history={history}
+            />
+          )}
+
+          {page === "journal" && (
+            <Journal
+              orders={orders}
+              setOrders={setOrders}
+              positions={positions}
+              setPositions={setPositions}
+              history={history}
+              setHistory={setHistory}
+            />
+          )}
 
           {page === "analytics" && (
             <>
