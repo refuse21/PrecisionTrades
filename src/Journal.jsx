@@ -219,12 +219,17 @@ export default function Journal({
   const qty = Number(form.quantity);
   const price = Number(form.price);
 
-  const orderData = {
-    ...form,
-    quantity: qty,
-    price,
-    screenshot,
-  };
+ const orderData = {
+  ...form,
+  quantity: Number(form.quantity),
+  price: Number(form.price),
+  screenshot,
+
+  time: new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+};
 
   // ==========================
   // EDIT ORDER
@@ -638,6 +643,7 @@ export default function Journal({
             disabled={editingIndex !== null}
             onChange={handleChange}
           />
+          
 
           <input
             name="strategy"
@@ -743,7 +749,18 @@ export default function Journal({
             <tbody>
               {filteredOrders.map((order) => (
                 <tr key={orders.indexOf(order)}>
-                  <td>{order.date}</td>
+                  <td>
+  <div>{order.date}</div>
+
+  <div
+    style={{
+      fontSize: "12px",
+      color: "#94a3b8",
+    }}
+  >
+    {order.time}
+  </div>
+</td>
                   <td>{order.market}</td>
                   <td>{order.symbol}</td>
                   <td>{order.quantity}</td>
