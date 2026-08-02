@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DailyPlan from "./DailyPlan";
 
 export default function Dashboard({
@@ -5,34 +6,103 @@ export default function Dashboard({
   positions,
   history,
 }) {
-  const todayPerformance = {
-  openPositions: 0,
-  closedTrades: 0,
-  todayTrades: 0,
-  winRate: 0,
-};
+  // ==========================
+  // STATES
+  // ==========================
 
-const monthlyPnL = {
-  indian: 0,
-  global: 0,
-  forex: 0,
-  crypto: 0,
-};
+  const [pnlView, setPnlView] = useState("monthly");
 
-const currentEquity = {
-  indian: 0,
-  global: 0,
-  forex: 0,
-  crypto: 0,
-};
+  // ==========================
+  // DATE HELPERS
+  // ==========================
 
-const recentActivity = [];
-  
-  
+  const today = new Date();
 
-  // ==========================================
-  // Common Card Style
-  // ==========================================
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const filteredHistory = history.filter((trade) => {
+    const tradeDate = new Date(trade.exitDate || trade.date);
+    
+    if (pnlView === "weekly") {
+      return tradeDate >= startOfWeek && tradeDate <= today;
+    }
+
+    return (
+      tradeDate.getMonth() === today.getMonth() &&
+      tradeDate.getFullYear() === today.getFullYear()
+    );
+  });
+
+  // ==========================
+  // MARKET P&L
+  // ==========================
+
+  const marketPnL = {
+    indian: filteredHistory
+      .filter((t) => t.market === "Indian Market")
+      .reduce((sum, t) => sum + Number(t.realizedPnL || 0), 0),
+
+    global: filteredHistory
+      .filter((t) => t.market === "Global Market")
+      .reduce((sum, t) => sum + Number(t.realizedPnL || 0), 0),
+
+    forex: filteredHistory
+      .filter((t) => t.market === "Forex")
+      .reduce((sum, t) => sum + Number(t.realizedPnL || 0), 0),
+
+    crypto: filteredHistory
+      .filter((t) => t.market === "Crypto")
+      .reduce((sum, t) => sum + Number(t.realizedPnL || 0), 0),
+  };
+
+  // ==========================
+  // TODAY'S P&L
+  // ==========================
+
+  const todayPnL = history
+  .filter((trade) => {
+    const tradeDate = new Date(trade.exitDate || trade.date);
+
+    return (
+      tradeDate.toDateString() === today.toDateString()
+    );
+  })
+  .reduce(
+    (sum, trade) =>
+      sum + Number(trade.realizedPnL || 0),
+    0
+  );
+
+  // ==========================
+  // DASHBOARD STATS
+  // ==========================
+
+  const openPositions = positions.length;
+
+  const closedTrades = history.length;
+
+  const todayOrders = orders.filter(
+    (order) =>
+      order.date === today.toISOString().split("T")[0]
+  ).length;
+
+  const winningTrades = history.filter(
+    (trade) => trade.realizedPnL > 0
+  ).length;
+
+  const winRate =
+    closedTrades === 0
+      ? 0
+      : (
+          (winningTrades / closedTrades) *
+          100
+        ).toFixed(1);
+
+  // ==========================
+  // COMMON CARD STYLE
+  // ==========================
 
   const cardStyle = {
     background: "#1e293b",
@@ -42,9 +112,9 @@ const recentActivity = [];
     boxShadow: "0 8px 20px rgba(0,0,0,0.25)",
   };
 
-  // ==========================================
-  // Dashboard
-  // ==========================================
+  // ==========================
+  // UI
+  // ==========================
 
   return (
     <div
@@ -54,433 +124,339 @@ const recentActivity = [];
         padding: "30px",
       }}
     >
-      
-
-
-     {/* ======================================
-        Today's Performance
-====================================== */}
-
-<section
-  style={{
-    marginBottom: "40px",
-  }}
->
-  <h2
-    style={{
-      marginBottom: "20px",
-      fontSize: "24px",
-    }}
-  >
-    Today's Performance
-  </h2>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-      gap: "20px",
-    }}
-  >
-    {/* Open Positions */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "10px",
-        }}
-      >
-        📈 Open Positions
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "38px",
-          color: "#38bdf8",
-        }}
-      >
-        {positions.filter((p) => p.status === "Open").length}
-      </h1>
-    </div>
-
-    {/* Closed Trades */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "10px",
-        }}
-      >
-        ✅ Closed Trades
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "38px",
-          color: "#22c55e",
-        }}
-      >
-        {history.length}
-      </h1>
-    </div>
-
-    {/* Today's Orders */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "10px",
-        }}
-      >
-        📒 Today's Orders
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "38px",
-          color: "#f59e0b",
-        }}
-      >
-        {
-  orders.filter(
-    (order) =>
-      order.date === new Date().toISOString().split("T")[0]
-  ).length
-}
-      </h1>
-    </div>
-
-    {/* Win Rate */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "10px",
-        }}
-      >
-        🏆 Win Rate
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "38px",
-          color: "#a855f7",
-        }}
-      >
-        {
-  history.length === 0
-    ? 0
-    : (
-        (history.filter((trade) => trade.realizedPnL > 0).length /
-          history.length) *
-        100
-      ).toFixed(1)
-}%
-      </h1>
-    </div>
-  </div>
-</section>
-
-      {/* ======================================
-        Monthly Market P&L
-====================================== */}
-
-<section
-  style={{
-    marginBottom: "40px",
-  }}
->
-  <h2
-    style={{
-      marginBottom: "20px",
-      fontSize: "24px",
-    }}
-  >
-    Monthly Market P&L
-  </h2>
-
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-      gap: "20px",
-    }}
-  >
-
-    {/* Indian */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "12px",
-        }}
-      >
-        🇮🇳 Indian Market
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "36px",
-          color:
-            monthlyPnL.indian >= 0
-              ? "#22c55e"
-              : "#ef4444",
-        }}
-      >
-        ₹ {monthlyPnL.indian.toFixed(2)}
-      </h1>
-    </div>
-
-    {/* Global */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "12px",
-        }}
-      >
-        🌍 Global Market
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "36px",
-          color:
-            monthlyPnL.global >= 0
-              ? "#22c55e"
-              : "#ef4444",
-        }}
-      >
-        $ {monthlyPnL.global.toFixed(2)}
-      </h1>
-    </div>
-
-    {/* Forex */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "12px",
-        }}
-      >
-        💱 Forex
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "36px",
-          color:
-            monthlyPnL.forex >= 0
-              ? "#22c55e"
-              : "#ef4444",
-        }}
-      >
-        $ {monthlyPnL.forex.toFixed(2)}
-      </h1>
-    </div>
-
-    {/* Crypto */}
-
-    <div style={cardStyle}>
-      <h4
-        style={{
-          color: "#94a3b8",
-          marginBottom: "12px",
-        }}
-      >
-        ₿ Crypto
-      </h4>
-
-      <h1
-        style={{
-          fontSize: "36px",
-          color:
-            monthlyPnL.crypto >= 0
-              ? "#22c55e"
-              : "#ef4444",
-        }}
-      >
-        $ {monthlyPnL.crypto.toFixed(2)}
-      </h1>
-    </div>
-
-  </div>
-</section>
-
-      {/* ======================================
-        Daily Plan + Current Equity
-====================================== */}
-
-<section
-  style={{
-    display: "grid",
-    gridTemplateColumns: "1.2fr 1fr",
-    gap: "20px",
-    marginBottom: "40px",
-  }}
->
-
-  
-
-  </section>
-     {/* ======================================
-        Equity Curve
-====================================== */}
-
-<section
-  style={{
-    marginBottom: "40px",
-  }}
->
-  <div style={cardStyle}>
-
-    <h2
-      style={{
-        marginBottom: "20px",
-      }}
-    >
-      📈 Equity Curve
-    </h2>
-
-    <div
-      style={{
-        height: "350px",
-        borderRadius: "12px",
-        background: "#0f172a",
-        border: "1px dashed #334155",
-
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-
-        flexDirection: "column",
-      }}
-    >
-
-      <div
-        style={{
-          fontSize: "70px",
-        }}
-      >
-        📊
-      </div>
-
-      <h3
-        style={{
-          marginTop: "15px",
-        }}
-      >
-        Equity Curve Coming Soon
-      </h3>
-
-      <p
-        style={{
-          color: "#94a3b8",
-          marginTop: "10px",
-        }}
-      >
-        Your account growth chart will appear here.
-      </p>
-
-    </div>
-
-  </div>
-</section>
-
-      {/* ======================================
-        Recent Activity
-====================================== */}
-
-<section
-  style={{
-    marginBottom: "40px",
-  }}
->
-  <div style={cardStyle}>
-
-    <h2
-      style={{
-        marginBottom: "20px",
-      }}
-    >
-      🕒 Recent Activity
-    </h2>
-
-    {recentActivity.length === 0 ? (
-
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-          color: "#94a3b8",
-        }}
-      >
-        <div
+      <section style={{ marginBottom: "40px" }}>
+        <h2
           style={{
-            fontSize: "60px",
-            marginBottom: "15px",
+            marginBottom: "20px",
+            fontSize: "24px",
           }}
         >
-          📒
-        </div>
-
-        <h3>No Activity Yet</h3>
-
-        <p>
-          Your latest trades will appear here.
-        </p>
-      </div>
-
-    ) : (
-
-      recentActivity.map((trade, index) => (
+          Today's Performance
+        </h2>
 
         <div
-          key={index}
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(220px,1fr))",
+            gap: "20px",
+          }}
+        >
+          <div style={cardStyle}>
+            <h4>📈 Open Positions</h4>
+            <h1>{openPositions}</h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>✅ Closed Trades</h4>
+            <h1>{closedTrades}</h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>📒 Today's Orders</h4>
+            <h1>{todayOrders}</h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>🏆 Win Rate</h4>
+            <h1>{winRate}%</h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>💰 Today's P&L</h4>
+
+            <h1
+              style={{
+                color:
+                  todayPnL >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+              }}
+            >
+              ₹ {todayPnL.toFixed(2)}
+            </h1>
+          </div>
+        </div>
+      </section>
+            {/* ======================================
+          Market Performance
+      ====================================== */}
+
+      <section
+        style={{
+          marginBottom: "40px",
+        }}
+      >
+        <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "15px 0",
-            borderBottom: "1px solid #334155",
+            marginBottom: "20px",
           }}
         >
+          <h2
+            style={{
+              fontSize: "24px",
+              margin: 0,
+            }}
+          >
+            Market Performance
+          </h2>
 
           <div>
+            <button
+              onClick={() => setPnlView("weekly")}
+              style={{
+                padding: "8px 18px",
+                marginRight: "10px",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background:
+                  pnlView === "weekly"
+                    ? "#2563eb"
+                    : "#334155",
+                color: "white",
+              }}
+            >
+              Weekly
+            </button>
 
-            <strong>
-              {trade.action}
-            </strong>
-
-            {" "}
-
-            {trade.symbol}
-
+            <button
+              onClick={() => setPnlView("monthly")}
+              style={{
+                padding: "8px 18px",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background:
+                  pnlView === "monthly"
+                    ? "#2563eb"
+                    : "#334155",
+                color: "white",
+              }}
+            >
+              Monthly
+            </button>
           </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(250px,1fr))",
+            gap: "20px",
+          }}
+        >
+          <div style={cardStyle}>
+            <h4>🇮🇳 Indian Market</h4>
+
+            <h1
+              style={{
+                color:
+                  marketPnL.indian >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+              }}
+            >
+              ₹ {marketPnL.indian.toFixed(2)}
+            </h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>🌍 Global Market</h4>
+
+            <h1
+              style={{
+                color:
+                  marketPnL.global >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+              }}
+            >
+              $ {marketPnL.global.toFixed(2)}
+            </h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>💱 Forex</h4>
+
+            <h1
+              style={{
+                color:
+                  marketPnL.forex >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+              }}
+            >
+              $ {marketPnL.forex.toFixed(2)}
+            </h1>
+          </div>
+
+          <div style={cardStyle}>
+            <h4>₿ Crypto</h4>
+
+            <h1
+              style={{
+                color:
+                  marketPnL.crypto >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+              }}
+            >
+              $ {marketPnL.crypto.toFixed(2)}
+            </h1>
+          </div>
+        </div>
+      </section>
+
+      {/* ======================================
+          Equity Curve
+      ====================================== */}
+
+      <section
+        style={{
+          marginBottom: "40px",
+        }}
+      >
+        <div style={cardStyle}>
+          <h2>📈 Equity Curve</h2>
 
           <div
             style={{
-              color: "#94a3b8",
+              height: "350px",
+              borderRadius: "12px",
+              background: "#0f172a",
+              border: "1px dashed #334155",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
             }}
           >
-            {trade.date}
+            <div style={{ fontSize: "70px" }}>
+              📊
+            </div>
+
+            <h3>Equity Curve Coming Soon</h3>
+
+            <p
+              style={{
+                color: "#94a3b8",
+              }}
+            >
+              Your account growth chart will appear here.
+            </p>
           </div>
-
         </div>
+      </section>
+            {/* ======================================
+          Recent Activity
+      ====================================== */}
 
-      ))
+      <section
+        style={{
+          marginBottom: "40px",
+        }}
+      >
+        <div style={cardStyle}>
+          <h2
+            style={{
+              marginBottom: "20px",
+            }}
+          >
+            🕒 Recent Activity
+          </h2>
 
-    )}
+          {history.length === 0 ? (
+            <div
+              style={{
+                padding: "40px",
+                textAlign: "center",
+                color: "#94a3b8",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "60px",
+                  marginBottom: "15px",
+                }}
+              >
+                📒
+              </div>
 
-  </div>
-</section>
+              <h3>No Activity Yet</h3>
+
+              <p>Your latest trades will appear here.</p>
+            </div>
+          ) : (
+            history
+              .slice()
+              .reverse()
+              .slice(0, 5)
+              .map((trade, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "15px 0",
+                    borderBottom: "1px solid #334155",
+                  }}
+                >
+                  <div>
+                    <strong>
+                      {trade.action} {trade.symbol}
+                    </strong>
+
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#94a3b8",
+                        marginTop: "5px",
+                      }}
+                    >
+                      {trade.market}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      textAlign: "right",
+                    }}
+                  >
+                    <div
+                      style={{
+                        color:
+                          trade.realizedPnL >= 0
+                            ? "#22c55e"
+                            : "#ef4444",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {trade.market === "Indian Market"
+                        ? "₹"
+                        : "$"}
+                      {Number(trade.realizedPnL || 0).toFixed(2)}
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#94a3b8",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {trade.date}
+                    </div>
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+      </section>
     </div>
   );
 }
