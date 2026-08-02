@@ -73,12 +73,7 @@ export default function App() {
     localStorage.setItem("history", JSON.stringify(history));
   }, [history, loaded]);
 
-  console.log({
-    orders,
-    positions,
-    history,
-  });
-
+  
   return (
         <div
       style={{
