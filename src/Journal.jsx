@@ -324,17 +324,7 @@ export default function Journal({
     // ==========================
   // PARTIAL EXIT
   // ==========================
-const closedQty = position.qty;
-setHistory((prev) => [
-        ...prev,
-        {
-          ...position,
-          qty: closedQty,
-          realizedPnL: position.realizedPnL,
-          exitPrice,
-          exitDate: new Date().toISOString().split("T")[0],
-        },
-      ]);
+
   const partialExit = (index) => {
 
     const exitQty = Number(prompt("Exit Quantity"));
