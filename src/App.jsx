@@ -1,6 +1,7 @@
 import Dashboard from "./Dashboard";
 import Journal from "./Journal";
 import { useEffect, useState } from "react";
+import Analytics from "./Analytics";
 import {
   BarChart3,
   Home,
@@ -203,11 +204,8 @@ export default function App() {
           )}
 
           {page === "analytics" && (
-            <>
-              <h2>Analytics</h2>
-              <p>Charts and performance analytics will be added here.</p>
-            </>
-          )}
+  <Analytics history={history} />
+)}
 
           {page === "settings" && (
             <>
