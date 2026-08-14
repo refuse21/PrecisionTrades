@@ -61,19 +61,32 @@ export default function Dashboard({
   // TODAY'S P&L
   // ==========================
 
-  const todayPnL = history
-  .filter((trade) => {
+ const todayTrades = history.filter((trade) => {
     const tradeDate = new Date(trade.exitDate || trade.date);
 
     return (
       tradeDate.toDateString() === today.toDateString()
     );
-  })
-  .reduce(
-    (sum, trade) =>
-      sum + Number(trade.realizedPnL || 0),
-    0
-  );
+  });
+
+  const todayPnLINR = todayTrades
+    .filter((trade) => trade.market === "Indian Market")
+    .reduce(
+      (sum, trade) => sum + Number(trade.realizedPnL || 0),
+      0
+    );
+
+  const todayPnLUSD = todayTrades
+    .filter(
+      (trade) =>
+        trade.market === "Global Market" ||
+        trade.market === "Forex" ||
+        trade.market === "Crypto"
+    )
+    .reduce(
+      (sum, trade) => sum + Number(trade.realizedPnL || 0),
+      0
+    );
 
   // ==========================
   // DASHBOARD STATS
@@ -168,12 +181,24 @@ export default function Dashboard({
             <h1
               style={{
                 color:
-                  todayPnL >= 0
+                  todayPnLINR >= 0
                     ? "#22c55e"
                     : "#ef4444",
               }}
             >
-              ₹ {todayPnL.toFixed(2)}
+              ₹ {todayPnLINR.toFixed(2)}
+            </h1>
+
+            <h1
+              style={{
+                color:
+                  todayPnLUSD >= 0
+                    ? "#22c55e"
+                    : "#ef4444",
+                marginTop: "6px",
+              }}
+            >
+              $ {todayPnLUSD.toFixed(2)}
             </h1>
           </div>
         </div>
