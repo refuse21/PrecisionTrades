@@ -4,9 +4,9 @@ export default function PositionCard({
   onFullExit,
 }) {
   const currency =
-  position.market === "Crypto"
-    ? "$"
-    : position.market === "Forex"
+  position.market === "Crypto" ||
+  position.market === "Forex" ||
+  position.market === "Global Market"
     ? "$"
     : "₹";
 
