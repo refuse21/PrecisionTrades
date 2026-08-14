@@ -345,6 +345,8 @@ export default function Journal({
         ? (exitPrice - position.avgPrice) * exitQty
         : (position.avgPrice - exitPrice) * exitQty;
 
+    const closedQty = position.qty;
+
     position.realizedPnL += pnl;
     position.qty -= exitQty;
 
@@ -357,6 +359,7 @@ export default function Journal({
         ...prev,
         {
           ...position,
+          qty: closedQty,
           realizedPnL: position.realizedPnL,
           exitPrice,
           exitDate: new Date().toISOString().split("T")[0],
@@ -377,7 +380,6 @@ export default function Journal({
       `Booked P&L : ${getCurrency(position.market)}${pnl.toFixed(2)}`
     );
   };
-
   // ==========================
   // FULL EXIT
   // ==========================
@@ -396,6 +398,8 @@ export default function Journal({
         ? (exitPrice - position.avgPrice) * position.qty
         : (position.avgPrice - exitPrice) * position.qty;
 
+    const closedQty = position.qty;
+
     position.realizedPnL += pnl;
 
     position.qty = 0;
@@ -405,6 +409,7 @@ export default function Journal({
       ...prev,
       {
         ...position,
+        qty: closedQty,
         realizedPnL: position.realizedPnL,
         exitPrice,
         exitDate: new Date().toISOString().split("T")[0],
