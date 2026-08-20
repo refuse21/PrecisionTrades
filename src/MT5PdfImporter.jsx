@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 
-const emptyForm = {
-  strategy: "",
-  notes: "",
-};
+const emptyForm = { strategy: "", notes: "" };
 
 const getLinesFromPdf = async (file) => {
   if (!window.pdfjsLib) {
     throw new Error("PDF reader is still loading. Please try again in a moment.");
   }
+
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
   const buffer = await file.arrayBuffer();
   const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
@@ -30,7 +30,14 @@ const getLinesFromPdf = async (file) => {
 
     const pageLines = [...rows.entries()]
       .sort((a, b) => b[0] - a[0])
-      .map(([, items]) => items.sort((a, b) => a.x - b.x).map((i) => i.text).join(" ").replace(/\s+/g, " ").trim())
+      .map(([, items]) =>
+        items
+          .sort((a, b) => a.x - b.x)
+          .map((item) => item.text)
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .trim()
+      )
       .filter(Boolean);
 
     lines.push(...pageLines);
@@ -42,8 +49,10 @@ const getLinesFromPdf = async (file) => {
 const parseDateTime = (value) => {
   const match = value.match(/(\d{4}[./-]\d{2}[./-]\d{2})\s+(\d{2}:\d{2}:\d{2})/);
   if (!match) return null;
-  const date = match[1].replaceAll(".", "-").replaceAll("/", "-");
-  return { date, time: match[2] };
+  return {
+    date: match[1].replaceAll(".", "-").replaceAll("/", "-"),
+    time: match[2],
+  };
 };
 
 const parseTradeLine = (line, index) => {
@@ -63,10 +72,10 @@ const parseTradeLine = (line, index) => {
 
   const action = afterTime[sideIndex].toUpperCase();
   const symbol = afterTime[sideIndex - 1];
-  const volume = Number(String(afterTime[sideIndex + 1] || "").replace(/,/g, ""));
+  const quantity = Number(String(afterTime[sideIndex + 1] || "").replace(/,/g, ""));
   const price = Number(String(afterTime[sideIndex + 2] || "").replace(/,/g, ""));
 
-  if (!symbol || !Number.isFinite(volume) || !Number.isFinite(price)) return null;
+  if (!symbol || !Number.isFinite(quantity) || !Number.isFinite(price)) return null;
   if (/^(balance|credit|charge|deposit|withdrawal)$/i.test(symbol)) return null;
 
   return {
@@ -77,7 +86,7 @@ const parseTradeLine = (line, index) => {
     symbol: symbol.toUpperCase(),
     action,
     purpose: "New Position",
-    quantity: volume,
+    quantity,
     price,
     date: dateTime.date,
     time: dateTime.time,
@@ -88,13 +97,9 @@ const parseTradeLine = (line, index) => {
 };
 
 const parseMt5Trades = (lines) => {
-  const trades = [];
-  lines.forEach((line, index) => {
-    const trade = parseTradeLine(line, index);
-    if (trade) trades.push(trade);
-  });
-
+  const trades = lines.map(parseTradeLine).filter(Boolean);
   const seen = new Set();
+
   return trades.filter((trade) => {
     const key = `${trade.date}|${trade.time}|${trade.symbol}|${trade.action}|${trade.quantity}|${trade.price}`;
     if (seen.has(key)) return false;
@@ -103,7 +108,7 @@ const parseMt5Trades = (lines) => {
   });
 };
 
-export default function MT5PdfImporter({ orders, setOrders, positions, setPositions }) {
+export default function MT5PdfImporter({ orders, setOrders }) {
   const [fileName, setFileName] = useState("");
   const [parsedTrades, setParsedTrades] = useState([]);
   const [selected, setSelected] = useState({});
@@ -120,6 +125,7 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     setBusy(true);
     setStatus("Reading MT5 PDF…");
     setFileName(file.name);
@@ -156,7 +162,12 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
     );
 
     const newTrades = selectedTrades
-      .filter((trade) => !existingKeys.has(`${trade.date}|${trade.time}|${trade.symbol}|${trade.action}|${trade.quantity}|${trade.price}`))
+      .filter(
+        (trade) =>
+          !existingKeys.has(
+            `${trade.date}|${trade.time}|${trade.symbol}|${trade.action}|${trade.quantity}|${trade.price}`
+          )
+      )
       .map((trade) => ({ ...trade, strategy, notes }));
 
     if (!newTrades.length) {
@@ -165,20 +176,6 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
     }
 
     setOrders([...orders, ...newTrades]);
-
-    const newPositions = newTrades.map((trade) => ({
-      symbol: trade.symbol,
-      market: trade.market,
-      product: trade.product,
-      action: trade.action,
-      qty: trade.quantity,
-      avgPrice: trade.price,
-      realizedPnL: 0,
-      status: "Open",
-      date: trade.date,
-    }));
-    setPositions([...positions, ...newPositions]);
-
     setParsedTrades([]);
     setSelected({});
     setStatus(`${newTrades.length} trade${newTrades.length === 1 ? "" : "s"} imported into the journal.`);
@@ -192,7 +189,9 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
       </p>
 
       <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginTop: "20px" }}>
-        <label style={{ display: "block", marginBottom: "10px", fontWeight: 700 }}>MT5 Trade Report PDF</label>
+        <label style={{ display: "block", marginBottom: "10px", fontWeight: 700 }}>
+          MT5 Trade Report PDF
+        </label>
         <input type="file" accept="application/pdf,.pdf" onChange={handleFile} disabled={busy} />
         {fileName && <p style={{ color: "#cbd5e1" }}>{fileName}</p>}
 
@@ -209,8 +208,12 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <h3>{selectedTrades.length} selected / {parsedTrades.length} detected</h3>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={toggleAll}>{selectedTrades.length === parsedTrades.length ? "Clear all" : "Select all"}</button>
-              <button onClick={importTrades} disabled={!selectedTrades.length}>Import selected trades</button>
+              <button onClick={toggleAll}>
+                {selectedTrades.length === parsedTrades.length ? "Clear all" : "Select all"}
+              </button>
+              <button onClick={importTrades} disabled={!selectedTrades.length}>
+                Import selected trades
+              </button>
             </div>
           </div>
 
@@ -230,7 +233,15 @@ export default function MT5PdfImporter({ orders, setOrders, positions, setPositi
               <tbody>
                 {parsedTrades.map((trade) => (
                   <tr key={trade.id} style={{ borderTop: "1px solid #334155" }}>
-                    <td style={{ padding: "10px" }}><input type="checkbox" checked={!!selected[trade.id]} onChange={() => setSelected((prev) => ({ ...prev, [trade.id]: !prev[trade.id] }))} /></td>
+                    <td style={{ padding: "10px" }}>
+                      <input
+                        type="checkbox"
+                        checked={!!selected[trade.id]}
+                        onChange={() =>
+                          setSelected((prev) => ({ ...prev, [trade.id]: !prev[trade.id] }))
+                        }
+                      />
+                    </td>
                     <td style={{ padding: "10px" }}>{trade.date}</td>
                     <td style={{ padding: "10px" }}>{trade.time}</td>
                     <td style={{ padding: "10px" }}>{trade.symbol}</td>
