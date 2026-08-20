@@ -17,6 +17,17 @@ export default function Journal({
 
   const [editingIndex, setEditingIndex] = useState(null);
 
+  // Returns today's date as YYYY-MM-DD in the user's LOCAL timezone.
+  // (new Date().toISOString() gives the UTC date, which rolls over
+  // before local midnight for timezones ahead of UTC, e.g. IST.)
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [search, setSearch] = useState("");
 
   const [marketFilter, setMarketFilter] = useState("All");
@@ -131,15 +142,15 @@ export default function Journal({
   const filteredOrders = orders.filter((order) => {
 
     const matchesSearch =
-      order.symbol
+      (order.symbol || "")
         .toLowerCase()
         .includes(search.toLowerCase()) ||
 
-      order.strategy
+      (order.strategy || "")
         .toLowerCase()
         .includes(search.toLowerCase()) ||
 
-      order.notes
+      (order.notes || "")
         .toLowerCase()
         .includes(search.toLowerCase());
 
@@ -362,7 +373,7 @@ export default function Journal({
           qty: closedQty,
           realizedPnL: position.realizedPnL,
           exitPrice,
-          exitDate: new Date().toISOString().split("T")[0],
+          exitDate: getLocalDateString(),
         },
       ]);
 
@@ -412,7 +423,7 @@ export default function Journal({
         qty: closedQty,
         realizedPnL: position.realizedPnL,
         exitPrice,
-        exitDate: new Date().toISOString().split("T")[0],
+        exitDate: getLocalDateString(),
       },
     ]);
 
