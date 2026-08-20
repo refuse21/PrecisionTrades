@@ -1,4 +1,82 @@
+import { useState } from "react";
+
 export default function Analytics({ history = [] }) {
+  // ==========================================
+  // TIME RANGE FILTER
+  // ==========================================
+
+  const [filterRange, setFilterRange] = useState("all");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const filterOptions = [
+    { key: "1d", label: "1D" },
+    { key: "1w", label: "1W" },
+    { key: "1m", label: "1M" },
+    { key: "3m", label: "3M" },
+    { key: "all", label: "All" },
+    { key: "custom", label: "Custom" },
+  ];
+
+  // Trades store the closing date on `exitDate`, falling back to the
+  // entry `date` for any legacy/open records that lack it.
+  const getTradeDate = (trade) => trade.exitDate || trade.date;
+
+  const getRangeBounds = (range) => {
+    const now = new Date();
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    if (range === "custom") {
+      const start = customStart
+        ? new Date(`${customStart}T00:00:00`)
+        : null;
+      const customEndDate = customEnd
+        ? new Date(`${customEnd}T23:59:59`)
+        : end;
+
+      return { start, end: customEndDate };
+    }
+
+    let start = null;
+
+    if (range === "1d") {
+      start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+    } else if (range === "1w") {
+      start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      start.setHours(0, 0, 0, 0);
+    } else if (range === "1m") {
+      start = new Date(now);
+      start.setMonth(start.getMonth() - 1);
+      start.setHours(0, 0, 0, 0);
+    } else if (range === "3m") {
+      start = new Date(now);
+      start.setMonth(start.getMonth() - 3);
+      start.setHours(0, 0, 0, 0);
+    }
+
+    return { start, end };
+  };
+
+  const filteredHistory =
+    filterRange === "all"
+      ? history
+      : history.filter((trade) => {
+          const dateStr = getTradeDate(trade);
+          if (!dateStr) return false;
+
+          const tradeDate = new Date(`${dateStr}T12:00:00`);
+          if (Number.isNaN(tradeDate.getTime())) return false;
+
+          const { start, end } = getRangeBounds(filterRange);
+
+          if (start && tradeDate < start) return false;
+          if (end && tradeDate > end) return false;
+
+          return true;
+        });
   // ==========================================
   // MARKET CONFIGURATION
   // ==========================================
@@ -179,7 +257,7 @@ export default function Analytics({ history = [] }) {
 
   const marketAnalytics = markets.map(
     (market) => {
-      const trades = history.filter(
+      const trades = filteredHistory.filter(
         (trade) =>
           trade.market === market.key
       );
@@ -255,6 +333,98 @@ export default function Analytics({ history = [] }) {
         >
           Performance analysis by market.
         </p>
+      </div>
+
+      {/* ======================================
+          TIME RANGE FILTER
+      ====================================== */}
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "10px",
+          marginBottom: "35px",
+        }}
+      >
+        {filterOptions.map((option) => {
+          const isActive = filterRange === option.key;
+
+          return (
+            <button
+              key={option.key}
+              onClick={() =>
+                setFilterRange(option.key)
+              }
+              style={{
+                padding: "8px 16px",
+                borderRadius: "10px",
+                border: isActive
+                  ? "1px solid #38bdf8"
+                  : "1px solid #334155",
+                background: isActive
+                  ? "#0c4a6e"
+                  : "#1e293b",
+                color: isActive
+                  ? "#7dd3fc"
+                  : "#94a3b8",
+                fontSize: "14px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+
+        {filterRange === "custom" && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginLeft: "6px",
+            }}
+          >
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) =>
+                setCustomStart(e.target.value)
+              }
+              style={{
+                background: "#1e293b",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                padding: "7px 10px",
+                color: "white",
+                fontSize: "14px",
+              }}
+            />
+
+            <span style={{ color: "#94a3b8" }}>
+              to
+            </span>
+
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) =>
+                setCustomEnd(e.target.value)
+              }
+              style={{
+                background: "#1e293b",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                padding: "7px 10px",
+                color: "white",
+                fontSize: "14px",
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* ======================================
