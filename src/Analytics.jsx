@@ -185,28 +185,28 @@ export default function Analytics({ history = [] }) {
         ? 0
         : grossLoss / lossCount;
 
-    // ------------------------------------------
-    // Best Trade
+       // ------------------------------------------
+    // Best Trade (largest win; 0 if no wins)
     // ------------------------------------------
 
     const bestTrade =
-      totalTrades === 0
+      winCount === 0
         ? 0
         : Math.max(
-            ...trades.map((trade) =>
+            ...winningTrades.map((trade) =>
               safeNumber(trade.realizedPnL)
             )
           );
 
     // ------------------------------------------
-    // Worst Trade
+    // Worst Trade (biggest loss; 0 if no losses)
     // ------------------------------------------
 
     const worstTrade =
-      totalTrades === 0
+      lossCount === 0
         ? 0
         : Math.min(
-            ...trades.map((trade) =>
+            ...losingTrades.map((trade) =>
               safeNumber(trade.realizedPnL)
             )
           );
