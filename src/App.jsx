@@ -1,5 +1,6 @@
 import Dashboard from "./Dashboard";
 import Journal from "./Journal";
+import MT5PdfImporter from "./MT5PdfImporter";
 import { useEffect, useState } from "react";
 import Analytics from "./Analytics";
 import {
@@ -7,26 +8,9 @@ import {
   Home,
   TrendingUp,
   ClipboardList,
+  Upload,
   Settings,
 } from "lucide-react";
-
-import StatCard from "./StatCard";
-
-const monthlyPnL = {
-  indian: 0,
-  global: 0,
-  forex: 0,
-  crypto: 0,
-};
-
-const currentEquity = {
-  indian: 0,
-  global: 0,
-  forex: 0,
-  crypto: 0,
-};
-
-const recentActivity = [];
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -36,7 +20,6 @@ export default function App() {
   const [history, setHistory] = useState([]);
 
   const [loaded, setLoaded] = useState(false);
-
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -52,10 +35,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -74,9 +54,8 @@ export default function App() {
     localStorage.setItem("history", JSON.stringify(history));
   }, [history, loaded]);
 
-  
   return (
-        <div
+    <div
       style={{
         backgroundColor: "#0f172a",
         color: "white",
@@ -84,8 +63,6 @@ export default function App() {
         fontFamily: "Arial",
       }}
     >
-      {/* Header */}
-
       <div
         style={{
           display: "flex",
@@ -95,29 +72,14 @@ export default function App() {
           borderBottom: "1px solid #334155",
         }}
       >
-        <h1
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
+        <h1 style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <BarChart3 size={30} />
           PrecisionTrades
         </h1>
 
         <div style={{ textAlign: "right" }}>
-          <h3 style={{ margin: 0 }}>
-            👋 Welcome, Pritesh
-          </h3>
-
-          <p
-            style={{
-              margin: "4px 0 0",
-              color: "#94a3b8",
-              fontSize: "14px",
-            }}
-          >
+          <h3 style={{ margin: 0 }}>👋 Welcome, Pritesh</h3>
+          <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "14px" }}>
             {currentTime.toLocaleDateString(undefined, {
               weekday: "long",
               day: "numeric",
@@ -125,27 +87,13 @@ export default function App() {
               year: "numeric",
             })}
           </p>
-
-          <p
-            style={{
-              margin: "2px 0 0",
-              color: "#64748b",
-              fontSize: "13px",
-            }}
-          >
-            {currentTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+          <p style={{ margin: "2px 0 0", color: "#64748b", fontSize: "13px" }}>
+            {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
       </div>
 
-      {/* Main Layout */}
-
       <div style={{ display: "flex" }}>
-        {/* Sidebar */}
-
         <div
           style={{
             width: "220px",
@@ -153,43 +101,26 @@ export default function App() {
             padding: "25px",
           }}
         >
-          <p
-            onClick={() => setPage("dashboard")}
-            style={{ cursor: "pointer", marginBottom: "20px" }}
-          >
+          <p onClick={() => setPage("dashboard")} style={{ cursor: "pointer", marginBottom: "20px" }}>
             <Home size={18} /> Dashboard
           </p>
-
-          <p
-            onClick={() => setPage("journal")}
-            style={{ cursor: "pointer", marginBottom: "20px" }}
-          >
+          <p onClick={() => setPage("journal")} style={{ cursor: "pointer", marginBottom: "20px" }}>
             <ClipboardList size={18} /> Journal
           </p>
-
-          <p
-            onClick={() => setPage("analytics")}
-            style={{ cursor: "pointer", marginBottom: "20px" }}
-          >
+          <p onClick={() => setPage("import")} style={{ cursor: "pointer", marginBottom: "20px" }}>
+            <Upload size={18} /> Import MT5 PDF
+          </p>
+          <p onClick={() => setPage("analytics")} style={{ cursor: "pointer", marginBottom: "20px" }}>
             <TrendingUp size={18} /> Analytics
           </p>
-
-          <p
-            onClick={() => setPage("settings")}
-            style={{ cursor: "pointer" }}
-          >
+          <p onClick={() => setPage("settings")} style={{ cursor: "pointer" }}>
             <Settings size={18} /> Settings
           </p>
         </div>
-                {/* Main Content */}
 
         <div style={{ flex: 1, padding: "30px" }}>
           {page === "dashboard" && (
-            <Dashboard
-              orders={orders}
-              positions={positions}
-              history={history}
-            />
+            <Dashboard orders={orders} positions={positions} history={history} />
           )}
 
           {page === "journal" && (
@@ -203,9 +134,16 @@ export default function App() {
             />
           )}
 
-          {page === "analytics" && (
-  <Analytics history={history} />
-)}
+          {page === "import" && (
+            <MT5PdfImporter
+              orders={orders}
+              setOrders={setOrders}
+              positions={positions}
+              setPositions={setPositions}
+            />
+          )}
+
+          {page === "analytics" && <Analytics history={history} />}
 
           {page === "settings" && (
             <>
