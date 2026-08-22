@@ -338,46 +338,6 @@ export default function Dashboard({
       </section>
 
       {/* ======================================
-          Equity Curve
-      ====================================== */}
-
-      <section
-        style={{
-          marginBottom: "40px",
-        }}
-      >
-        <div style={cardStyle}>
-          <h2>📈 Equity Curve</h2>
-
-          <div
-            style={{
-              height: "350px",
-              borderRadius: "12px",
-              background: "#0f172a",
-              border: "1px dashed #334155",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              flexDirection: "column",
-            }}
-          >
-            <div style={{ fontSize: "70px" }}>
-              📊
-            </div>
-
-            <h3>Equity Curve Coming Soon</h3>
-
-            <p
-              style={{
-                color: "#94a3b8",
-              }}
-            >
-              Your account growth chart will appear here.
-            </p>
-          </div>
-        </div>
-      </section>
-            {/* ======================================
           Recent Activity
       ====================================== */}
 

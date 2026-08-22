@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EquityCurve from "./EquityCurve";
 
 export default function Analytics({ history = [] }) {
   // ==========================================
@@ -87,24 +88,28 @@ export default function Analytics({ history = [] }) {
       name: "Indian Market",
       currency: "₹",
       icon: "🇮🇳",
+      color: "#fb923c",
     },
     {
       key: "Global Market",
       name: "Global Market",
       currency: "$",
       icon: "🌍",
+      color: "#38bdf8",
     },
     {
       key: "Forex",
       name: "Forex",
       currency: "$",
       icon: "💱",
+      color: "#a855f7",
     },
     {
       key: "Crypto",
       name: "Crypto",
       currency: "$",
       icon: "₿",
+      color: "#eab308",
     },
   ];
 
@@ -426,6 +431,12 @@ export default function Analytics({ history = [] }) {
           </div>
         )}
       </div>
+
+      {/* ======================================
+          EQUITY CURVE
+      ====================================== */}
+
+      <EquityCurve history={filteredHistory} markets={markets} />
 
       {/* ======================================
           MARKET SECTIONS
